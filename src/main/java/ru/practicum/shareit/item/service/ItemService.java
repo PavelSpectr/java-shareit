@@ -30,7 +30,6 @@ public class ItemService {
 
     public ItemDto addNewItem(ItemDto itemDto, Long userId) {
         User user = validateAndGetUser(userId);
-        validateItemDto(itemDto);
 
         Item item = ItemMapper.toItem(itemDto, user, null);
         Item addedItem = itemStorage.add(item);
@@ -59,13 +58,6 @@ public class ItemService {
                 .filter(Item::getAvailable)
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
-    }
-
-    private void validateItemDto(ItemDto itemDto) {
-        if (itemDto.getName() == null || itemDto.getDescription() == null || itemDto.getAvailable() == null ||
-                itemDto.getName().isBlank() || itemDto.getDescription().isBlank()) {
-            throw new ItemBadRequestException("Попытка добавить элемент с отсутствующими полями");
-        }
     }
 
     private User validateAndGetUser(Long userId) {

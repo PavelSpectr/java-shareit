@@ -14,6 +14,7 @@ import java.util.*;
 public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Long, User> usersMap = new HashMap<>();
+    private final Set<String> emailSet = new HashSet<>();
     private Long id = 0L;
 
     private Long getNextId() {
@@ -22,18 +23,19 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User add(User user) {
-        validateUserEmail(user.getEmail(), null);
+        validateUserEmail(user.getEmail());
         Long userId = getNextId();
         log.info("Добавлен пользователь. userId = {}, user = {}", userId, user);
         user.setId(userId);
         usersMap.put(userId, user);
+        emailSet.add(user.getEmail());
         return user;
     }
 
     @Override
     public User update(User user, Long userId) {
         validateUserExists(userId);
-        validateUserEmail(user.getEmail(), userId);
+        validateUserEmail(user.getEmail());
         User userUpdate = usersMap.get(userId);
         if (user.getName() != null) {
             userUpdate.setName(user.getName());
@@ -62,18 +64,14 @@ public class InMemoryUserStorage implements UserStorage {
         return Optional.ofNullable(usersMap.get(id));
     }
 
-    private void validateUserEmail(String email, Long id) {
-        boolean emailExists = usersMap.values().stream()
-                .filter(u -> !Objects.equals(u.getId(), id))
-                .anyMatch(u -> Objects.equals(email, u.getEmail()));
-
-        if (emailExists) {
+    private void validateUserEmail(String email) { //Исправил алгоритм
+        if (emailSet.contains(email)) {
             throw new UserInvalidDataException("Ошибка обновления. Такая почта уже существует");
         }
     }
 
     private void validateUserExists(Long id) {
-        if (!usersMap.containsKey(id)) {
+        if (!Objects.equals(id, usersMap.get(id).getId())) { //Поменял алгоритм
             throw new UserBadRequestException("Ошибка обновления пользователя. Id пользователя не найден");
         }
     }

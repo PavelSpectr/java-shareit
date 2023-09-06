@@ -11,9 +11,6 @@ import ru.practicum.shareit.item.service.ItemService;
 import javax.validation.Valid;
 import java.util.Collection;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Slf4j
 @Validated
 @RequiredArgsConstructor
@@ -31,7 +28,6 @@ public class ItemController {
         return itemService.addNewItem(itemDto, userId);
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/{itemId}")
     public ItemDto changeItem(@PathVariable Long itemId,
                               @RequestHeader("X-Sharer-User-Id") Long userId,
@@ -52,7 +48,6 @@ public class ItemController {
         return itemService.getItemsByUserId(userId);
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/search")
     public Collection<ItemDto> getAvailableItemsForRent(@RequestParam String text) {
         log.info("Запрос на поиск {}", text);

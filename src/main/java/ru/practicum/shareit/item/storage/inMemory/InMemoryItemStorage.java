@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.storage.inMemory;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.item.ItemBadRequestException;
 import ru.practicum.shareit.exception.item.ItemNotFoundException;
@@ -10,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class InMemoryItemStorage implements ItemStorage {
     private final Map<Long, Item> itemMap = new HashMap<>();
     private Long id = 0L;
@@ -63,7 +65,7 @@ public class InMemoryItemStorage implements ItemStorage {
     }
 
     @Override
-    public Collection<Item> getById(Long userId) {
+    public Collection<Item> getById(Long userId) { //Понимаю реализацию, но без подключения БД в ней пока нет особого смысла
         return itemMap.values();
     }
 

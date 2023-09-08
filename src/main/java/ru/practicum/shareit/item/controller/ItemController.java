@@ -31,7 +31,7 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ItemDto changeItem(@PathVariable Long itemId,
                               @RequestHeader("X-Sharer-User-Id") Long userId,
-                              @Valid @RequestBody ItemDto itemDto) {
+                              @RequestBody ItemDto itemDto) {
         log.info("Запрос на обмен вещи {}", itemDto);
         return itemService.updateItem(itemId, userId, itemDto);
     }

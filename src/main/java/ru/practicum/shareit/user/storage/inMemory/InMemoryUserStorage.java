@@ -34,13 +34,17 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User user, Long userId) {
-        validateUserExists(userId);
-        validateUserEmail(user.getEmail());
         User userUpdate = usersMap.get(userId);
+        validateUserExists(userId);
+        if (!Objects.equals(user.getEmail(), userUpdate.getEmail())) {
+            validateUserEmail(user.getEmail());
+        }
         if (user.getName() != null) {
             userUpdate.setName(user.getName());
         }
         if (user.getEmail() != null) {
+            emailSet.remove(userUpdate.getEmail());
+            emailSet.add(user.getEmail());
             userUpdate.setEmail(user.getEmail());
         }
         log.info("User id = {} обновлён", userId);
@@ -55,6 +59,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public void deleteById(Long userId) {
         validateUserExists(userId);
+        emailSet.remove(usersMap.get(userId).getEmail());
         usersMap.remove(userId);
         log.info("user id = {} удалён", userId);
     }

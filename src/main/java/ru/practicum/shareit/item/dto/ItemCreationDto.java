@@ -1,23 +1,22 @@
-package ru.practicum.shareit.user.dto;
+package ru.practicum.shareit.item.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.validation.ValidationGroup;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Data
 @Builder
 @AllArgsConstructor
-public class UserDto {
+public class ItemCreationDto {
     private Long id;
 
     @NotBlank(
-            groups = ValidationGroup.OnCreate.class,
+            groups = {ValidationGroup.OnCreate.class},
             message = "Имя не должно быть пустым или содержать только пробельные символы"
     )
     @Size(
@@ -26,17 +25,17 @@ public class UserDto {
     )
     private String name;
 
-    @NotEmpty(
+    @NotBlank(
             groups = {ValidationGroup.OnCreate.class},
-            message = "Электронный адрес не должен быть пустым"
+            message = "Описание не должно быть пустым или содержать только пробельные символы"
     )
-    @Email(
-            groups = {ValidationGroup.OnCreate.class, ValidationGroup.OnUpdate.class},
-            message = "Неверный адрес электронной почты"
+    private String description;
+
+    @NotNull(
+            groups = {ValidationGroup.OnCreate.class},
+            message = "Признак доступности вещи не должен быть null"
     )
-    @Size(
-            groups = {ValidationGroup.OnCreate.class, ValidationGroup.OnUpdate.class},
-            max = 320
-    )
-    private String email;
+    private Boolean available;
+
+    private Long requestId;
 }

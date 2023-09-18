@@ -1,5 +1,8 @@
 package ru.practicum.shareit.booking.model;
 
+import lombok.Getter;
+
+@Getter
 public enum BookingStatusFilter {
     ALL("все"),
     CURRENT("текущие"),
@@ -14,7 +17,4 @@ public enum BookingStatusFilter {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
 }

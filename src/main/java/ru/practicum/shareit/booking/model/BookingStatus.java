@@ -1,5 +1,8 @@
 package ru.practicum.shareit.booking.model;
 
+import lombok.Getter;
+
+@Getter
 public enum BookingStatus {
     WAITING("ожидает одобрения"),
     APPROVED("подтверждено владельцем"),
@@ -12,7 +15,4 @@ public enum BookingStatus {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
 }

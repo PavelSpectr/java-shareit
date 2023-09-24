@@ -36,7 +36,7 @@ public class BookingServiceImpl implements BookingService {
 
         try {
             BookingStatusFilter bookingStatusFilter = BookingStatusFilter.optionalStatus(statusFilter).orElseThrow(() ->
-                    new ValidationException("Неверный статус бронирования: " + statusFilter));
+                    new ValidationException("Unknown state: UNSUPPORTED_STATUS"));
 
             switch (bookingStatusFilter) {
                 case ALL:
@@ -59,8 +59,7 @@ public class BookingServiceImpl implements BookingService {
                 case REJECTED:
                     bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
                     break;
-                /*default: //Не совсем понимаю, как это работает, но return bookings, в случае удаления default, требует инициализации
-                    throw new ValidationException("Неверный статус бронирования: " + bookingStatusFilter);*/
+                //Не совсем понимаю, как это работает, но return bookings, в случае удаления default, требует инициализации
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown state: UNSUPPORTED_STATUS");
@@ -79,7 +78,7 @@ public class BookingServiceImpl implements BookingService {
 
         try {
             BookingStatusFilter bookingStatusFilter = BookingStatusFilter.optionalStatus(statusFilter).orElseThrow(() ->
-                    new ValidationException("Неверный статус бронирования: " + statusFilter));
+                    new ValidationException("Unknown state: UNSUPPORTED_STATUS"));
             switch (bookingStatusFilter) {
                 case ALL:
                     bookings = bookingRepository.findAllByItem_OwnerIdOrderByStartDesc(itemOwnerId);
@@ -140,19 +139,6 @@ public class BookingServiceImpl implements BookingService {
         if (!overlappingBookings.isEmpty()) {
             throw new ValidationException("Невозможно создать бронирование. Уже существуют бронирования, которые пересекаются по времени.");
         }
-        //Блок реализации проверки пересечений времени бронирования -->
-        /*LocalDateTime newStartTime = booking.getStart();
-        LocalDateTime newEndTime = booking.getEnd();
-        List<Booking> existingBookings = bookingRepository.findAllByItemOrderByStartDateAsc(booking);
-        for (Booking existingBooking : existingBookings) {
-            LocalDateTime existingStartTime = existingBooking.getStart();
-            LocalDateTime existingEndTime = existingBooking.getEnd();
-            if (isTimeOverlap(existingStartTime, existingEndTime, newStartTime, newEndTime)) {
-                throw new ValidationException("WARNING: Бронирование не возможно: Бронирование пересекается с другим бронированием.");
-            }
-        }*/
-        //<-- Конец блока проверки пересечений времени бронирования (Ох уж этот checkstyle)
-
         booking.setBooker(booker);
         booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
@@ -164,13 +150,6 @@ public class BookingServiceImpl implements BookingService {
 
         return bookingRepository.save(booking);
     }
-
-    //Добавил метод определения пересечений по времени бронирования
-    /*private boolean isTimeOverlap(LocalDateTime startTime1, LocalDateTime endTime1,
-                                  LocalDateTime startTime2, LocalDateTime endTime2) {
-
-        return startTime1.isBefore(endTime2) && endTime1.isAfter(startTime2);
-    }*/
 
     @Override
     public Booking approveOrRejectBooking(Long bookingId, boolean isApproved, Long userId) {

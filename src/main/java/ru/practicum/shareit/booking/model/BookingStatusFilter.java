@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.model;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public enum BookingStatusFilter {
     ALL,
@@ -11,6 +12,8 @@ public enum BookingStatusFilter {
     REJECTED;
 
     public static Optional<BookingStatusFilter> optionalStatus(String status) {
-        return Optional.of(BookingStatusFilter.valueOf(status));
+        return Stream.of(values())
+                .filter(filter -> filter.name().equalsIgnoreCase(status))
+                .findFirst();
     }
 }

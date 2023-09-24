@@ -15,6 +15,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,7 +27,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<Booking> getBookingsByBookerId(long bookerId, String statusFilter) {
-        List<Booking> bookings;
+        List<Booking> bookings = new ArrayList<>();
         LocalDateTime currentDateTime = LocalDateTime.now();
 
         if (!userRepository.existsById(bookerId)) {
@@ -34,7 +35,8 @@ public class BookingServiceImpl implements BookingService {
         }
 
         try {
-            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.valueOf(statusFilter);
+            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.optionalStatus(statusFilter).orElseThrow(() ->
+                    new ValidationException("Неверный статус бронирования: " + statusFilter));
 
             switch (bookingStatusFilter) {
                 case ALL:
@@ -57,19 +59,18 @@ public class BookingServiceImpl implements BookingService {
                 case REJECTED:
                     bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
                     break;
-                default:
-                    throw new ValidationException("Неверный статус бронирования: " + bookingStatusFilter);
+                /*default: //Не совсем понимаю, как это работает, но return bookings, в случае удаления default, требует инициализации
+                    throw new ValidationException("Неверный статус бронирования: " + bookingStatusFilter);*/
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown state: UNSUPPORTED_STATUS");
         }
-
         return bookings;
     }
 
     @Override
     public List<Booking> getBookingsByItemOwnerId(long itemOwnerId, String statusFilter) {
-        List<Booking> bookings;
+        List<Booking> bookings = new ArrayList<>();
         LocalDateTime currentDateTime = LocalDateTime.now();
 
         if (!userRepository.existsById(itemOwnerId)) {
@@ -77,7 +78,8 @@ public class BookingServiceImpl implements BookingService {
         }
 
         try {
-            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.valueOf(statusFilter);
+            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.optionalStatus(statusFilter).orElseThrow(() ->
+                    new ValidationException("Неверный статус бронирования: " + statusFilter));
             switch (bookingStatusFilter) {
                 case ALL:
                     bookings = bookingRepository.findAllByItem_OwnerIdOrderByStartDesc(itemOwnerId);
@@ -99,13 +101,10 @@ public class BookingServiceImpl implements BookingService {
                 case REJECTED:
                     bookings = bookingRepository.findAllByItem_OwnerIdAndStatusOrderByStartDesc(itemOwnerId, BookingStatus.REJECTED);
                     break;
-                default:
-                    throw new ValidationException("Неверный статус бронирования: " + bookingStatusFilter);
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown state: UNSUPPORTED_STATUS");
         }
-
         return bookings;
     }
 
@@ -137,6 +136,23 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException(String.format("Вещь #" + itemId + " недоступна для бронирования."));
         }
 
+        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(item.getId(), booking.getStart(), booking.getEnd());
+        if (!overlappingBookings.isEmpty()) {
+            throw new ValidationException("Невозможно создать бронирование. Уже существуют бронирования, которые пересекаются по времени.");
+        }
+        //Блок реализации проверки пересечений времени бронирования -->
+        /*LocalDateTime newStartTime = booking.getStart();
+        LocalDateTime newEndTime = booking.getEnd();
+        List<Booking> existingBookings = bookingRepository.findAllByItemOrderByStartDateAsc(booking);
+        for (Booking existingBooking : existingBookings) {
+            LocalDateTime existingStartTime = existingBooking.getStart();
+            LocalDateTime existingEndTime = existingBooking.getEnd();
+            if (isTimeOverlap(existingStartTime, existingEndTime, newStartTime, newEndTime)) {
+                throw new ValidationException("WARNING: Бронирование не возможно: Бронирование пересекается с другим бронированием.");
+            }
+        }*/
+        //<-- Конец блока проверки пересечений времени бронирования (Ох уж этот checkstyle)
+
         booking.setBooker(booker);
         booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
@@ -148,6 +164,13 @@ public class BookingServiceImpl implements BookingService {
 
         return bookingRepository.save(booking);
     }
+
+    //Добавил метод определения пересечений по времени бронирования
+    /*private boolean isTimeOverlap(LocalDateTime startTime1, LocalDateTime endTime1,
+                                  LocalDateTime startTime2, LocalDateTime endTime2) {
+
+        return startTime1.isBefore(endTime2) && endTime1.isAfter(startTime2);
+    }*/
 
     @Override
     public Booking approveOrRejectBooking(Long bookingId, boolean isApproved, Long userId) {
@@ -162,7 +185,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (!currentStatus.equals(BookingStatus.WAITING)) {
             throw new ValidationException("Подтверждение или отклонение запроса на бронирование невозможно, " +
-                    "так как бронирование #" + bookingId + " " + currentStatus.getName());
+                    "так как бронирование #" + bookingId + " имеет статус " + currentStatus);
         }
 
         booking.setStatus(isApproved ? BookingStatus.APPROVED : BookingStatus.REJECTED);

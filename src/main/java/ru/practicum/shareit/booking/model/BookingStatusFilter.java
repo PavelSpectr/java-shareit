@@ -1,20 +1,16 @@
 package ru.practicum.shareit.booking.model;
 
-import lombok.Getter;
+import java.util.Optional;
 
-@Getter
 public enum BookingStatusFilter {
-    ALL("все"),
-    CURRENT("текущие"),
-    PAST("завершенные"),
-    FUTURE("будущие"),
-    WAITING("ожидающие подтверждения"),
-    REJECTED("отклоненные");
+    ALL,
+    CURRENT,
+    PAST,
+    FUTURE,
+    WAITING,
+    REJECTED;
 
-    private final String name;
-
-    BookingStatusFilter(String name) {
-        this.name = name;
+    public static Optional<BookingStatusFilter> optionalStatus(String status) {
+        return Optional.of(BookingStatusFilter.valueOf(status));
     }
-
 }

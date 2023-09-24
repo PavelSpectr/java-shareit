@@ -6,7 +6,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.time.LocalDateTime;
 
-public class CheckDateValidator implements ConstraintValidator<StartBeforeEndDateValid, BookingCreationDto> {
+public class CheckDateValidator implements ConstraintValidator<StartBeforeEndDateValid, BookingCreationDto> { // Благодарю)
     @Override
     public void initialize(StartBeforeEndDateValid constraintAnnotation) {
     }

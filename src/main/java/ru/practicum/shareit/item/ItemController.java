@@ -2,6 +2,8 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.handlers.HeaderConstants;
@@ -17,23 +19,31 @@ import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.validation.ValidationGroup;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<ItemDetailsInfoDto> getItemsByOwnerId(@RequestHeader(HeaderConstants.X_SHARER_USER_ID) long ownerId) {
+    public List<ItemDetailsInfoDto> getItemsByOwnerId(
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) long ownerId,
+            @RequestParam(value = "from", defaultValue = "0") @Min(0) Integer offset,
+            @RequestParam(value = "size", defaultValue = "20") @Min(1) @Max(100) Integer limit
+    ) {
         log.debug("+ getItemsByOwnerId: ownerId={}", ownerId);
-        List<ItemDetailsInfoDto> items = itemService.getItemsByOwnerId(ownerId).stream()
-                .map(ItemMapper::toItemDetailsInfoDto)
-                .collect(toList());
+
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+
+        List<ItemDetailsInfoDto> items = ItemMapper
+                .toItemDetailsInfoDto(itemService.getItemsByOwnerId(ownerId, pageable));
+
         log.debug("- getItemsByOwnerId: {}", items);
         return items;
     }
@@ -48,11 +58,18 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDetailsInfoDto> searchItems(@RequestParam String text) {
+    public List<ItemDetailsInfoDto> searchItems(
+            @RequestParam String text,
+            @RequestParam(value = "from", defaultValue = "0") @Min(0) Integer offset,
+            @RequestParam(value = "size", defaultValue = "20") @Min(1) @Max(100) Integer limit
+    ) {
         log.debug("+ searchItems: text={}", text);
-        List<ItemDetailsInfoDto> items = itemService.searchItems(text).stream()
-                .map(ItemMapper::toItemDetailsInfoDto)
-                .collect(toList());
+
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+
+        List<ItemDetailsInfoDto> items = ItemMapper
+                .toItemDetailsInfoDto(itemService.searchItems(text, pageable));
+
         log.debug("- searchItems: {}", items);
         return items;
     }
@@ -60,7 +77,7 @@ public class ItemController {
     @PostMapping
     public ItemDetailsInfoDto createItem(@RequestBody @Validated(ValidationGroup.OnCreate.class) ItemCreationDto item,
                                          @RequestHeader(HeaderConstants.X_SHARER_USER_ID) long userId) {
-        log.debug("+ createItem: item={}, userId={}", item, userId);
+        log.info("+ createItem: item={}, userId={}", item, userId);
 
         Item createdItem = itemService.createItem(ItemMapper.toItem(item), userId);
         ItemDetailsInfoDto createdItemDto = ItemMapper.toItemDetailsInfoDto(createdItem);

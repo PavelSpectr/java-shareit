@@ -1,19 +1,20 @@
 package ru.practicum.shareit.booking.model;
 
-import java.util.Optional;
-import java.util.stream.Stream;
-
 public enum BookingStatusFilter {
-    ALL,
-    CURRENT,
-    PAST,
-    FUTURE,
-    WAITING,
-    REJECTED;
+    ALL("все"),
+    CURRENT("текущие"),
+    PAST("завершенные"),
+    FUTURE("будущие"),
+    WAITING("ожидающие подтверждения"),
+    REJECTED("отклоненные");
 
-    public static Optional<BookingStatusFilter> optionalStatus(String status) {
-        return Stream.of(values())
-                .filter(filter -> filter.name().equalsIgnoreCase(status))
-                .findFirst();
+    private final String name;
+
+    BookingStatusFilter(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 }

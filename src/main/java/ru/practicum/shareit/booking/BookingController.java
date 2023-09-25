@@ -2,6 +2,9 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingCreationDto;
 import ru.practicum.shareit.booking.dto.BookingDetailsInfoDto;
@@ -11,25 +14,31 @@ import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.handlers.HeaderConstants;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @RestController
 @RequestMapping("/bookings")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class BookingController {
     private final BookingService bookingService;
 
     @GetMapping
-    public List<BookingDetailsInfoDto> getBookingsByBookerId(@RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long bookerId,
-                                                             @RequestParam(defaultValue = "ALL") String state) {
+    public List<BookingDetailsInfoDto> getBookingsByBookerId(
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long bookerId,
+            @RequestParam(defaultValue = "ALL") String state,
+            @RequestParam(value = "from", defaultValue = "0") @Min(0) Integer offset,
+            @RequestParam(value = "size", defaultValue = "20") @Min(1) @Max(100) Integer limit
+    ) {
         log.debug("+ getBookingsByBookerId: bookerId={}, state={}, ", bookerId, state);
 
-        List<BookingDetailsInfoDto> bookings = bookingService.getBookingsByBookerId(bookerId, state).stream()
-                .map(BookingMapper::toBookingDetailsDto)
-                .collect(toList());
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+
+        List<BookingDetailsInfoDto> bookings = BookingMapper
+                .toBookingDetailsDto(bookingService.getBookingsByBookerId(bookerId, state, pageable));
 
         log.debug("- getBookingsByBookerId: {}", bookings);
 
@@ -37,13 +46,18 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public List<BookingDetailsInfoDto> getBookingsByItemOwnerId(@RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long itemOwnerId,
-                                                                @RequestParam(defaultValue = "ALL") String state) {
+    public List<BookingDetailsInfoDto> getBookingsByItemOwnerId(
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long itemOwnerId,
+            @RequestParam(defaultValue = "ALL") String state,
+            @RequestParam(value = "from", defaultValue = "0") @Min(0) Integer offset,
+            @RequestParam(value = "size", defaultValue = "20") @Min(1) @Max(100) Integer limit
+    ) {
         log.debug("+ getBookingsByItemOwnerId: itemOwnerId={}, state={}, ", itemOwnerId, state);
 
-        List<BookingDetailsInfoDto> bookings = bookingService.getBookingsByItemOwnerId(itemOwnerId, state).stream()
-                .map(BookingMapper::toBookingDetailsDto)
-                .collect(toList());
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+
+        List<BookingDetailsInfoDto> bookings = BookingMapper
+                .toBookingDetailsDto(bookingService.getBookingsByItemOwnerId(itemOwnerId, state, pageable));
 
         log.debug("- getBookingsByItemOwnerId: {}", bookings);
 
@@ -54,7 +68,8 @@ public class BookingController {
     public BookingDetailsInfoDto getBookingById(@PathVariable Long bookingId,
                                                 @RequestHeader(HeaderConstants.X_SHARER_USER_ID) long userId) {
         log.debug("+ getBookingById: bookingId={}", bookingId);
-        BookingDetailsInfoDto booking = BookingMapper.toBookingDetailsDto(bookingService.getBookingById(bookingId, userId));
+        BookingDetailsInfoDto booking = BookingMapper
+                .toBookingDetailsDto(bookingService.getBookingById(bookingId, userId));
         log.debug("- getBookingById: {}", booking);
         return booking;
     }

@@ -12,6 +12,6 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CommentCreationDto {
-    @NotBlank(message = "Текст комментария не должн быть пустым или содержать только пробельные символы")
+    @NotBlank(message = "Текст комментария не должен быть пустым или содержать только пробельные символы")
     private String text;
 }

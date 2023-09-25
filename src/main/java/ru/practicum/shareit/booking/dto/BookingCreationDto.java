@@ -21,6 +21,6 @@ public class BookingCreationDto {
 
     private LocalDateTime end;
 
-    @NotNull(message = "Идентификатор вещи, которую бронирует пользователь не должн быть null")
+    @NotNull(message = "Идентификатор вещи, которую бронирует пользователь не должен быть null")
     private Long itemId;
 }

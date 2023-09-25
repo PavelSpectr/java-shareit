@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.shareit.exceptions.ErrorResponse;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.UnauthorizedAccessException;
-import ru.practicum.shareit.exceptions.UserAlreadyExistsException;
 
 import javax.validation.ValidationException;
 
@@ -19,13 +18,6 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final ValidationException e) {
         log.error("Получен статус 400 Bad Request: {}", e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleUserAlreadyExistsException(final UserAlreadyExistsException e) {
-        log.error("Получен статус 409 Conflict: {}", e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }
 

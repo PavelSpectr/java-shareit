@@ -1,18 +1,15 @@
 package ru.practicum.shareit.itemRequest.model;
 
 import lombok.*;
+import ru.practicum.shareit.item.dto.ItemShortInfoDto;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 
-/**
- * TODO Sprint add-item-requests.
- */
 @Entity
-@Table(name = "requests", schema = "public")
+@Table(name = "item_requests", schema = "public")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,13 +20,14 @@ public class ItemRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Описание не должно быть пустым или содержать только пробельные символы")
     private String description;
 
-    @ManyToOne
-    @NotNull(message = "Пользователь, создавший запрос не должен быть null")
+    @ManyToOne(fetch = FetchType.LAZY)
     private User requestor;
 
     @Column(name = "created_at")
     private LocalDateTime created;
+
+    @Transient
+    private List<ItemShortInfoDto> items;
 }

@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.handlers.HeaderConstants;
+import ru.practicum.shareit.item.ItemController;
 import ru.practicum.shareit.item.dto.CommentCreationDto;
 import ru.practicum.shareit.item.dto.ItemCreationDto;
 import ru.practicum.shareit.item.dto.ItemDetailsInfoDto;

@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.handlers.HeaderConstants;
+import ru.practicum.shareit.itemRequest.ItemRequestController;
 import ru.practicum.shareit.itemRequest.dto.ItemRequestCreationDto;
 import ru.practicum.shareit.itemRequest.dto.ItemRequestDetailsInfoDto;
 import ru.practicum.shareit.itemRequest.mapper.ItemRequestMapper;

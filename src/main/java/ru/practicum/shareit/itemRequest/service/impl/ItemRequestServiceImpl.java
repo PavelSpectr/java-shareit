@@ -3,6 +3,7 @@ package ru.practicum.shareit.itemRequest.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemShortInfoDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
@@ -28,6 +29,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRepository itemRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public ItemRequest getItemRequestById(Long itemRequestId, Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь #" + userId + " не найден.");
@@ -42,6 +44,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemRequest> getItemRequests(Long userId, Pageable pageable) {
         List<ItemRequest> itemRequests = itemRequestRepository
                 .findByRequestorIdNotOrderByCreatedDesc(userId, pageable);
@@ -52,6 +55,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemRequest> getItemRequestsByRequestorId(Long requestorId) {
         if (!userRepository.existsById(requestorId)) {
             throw new NotFoundException("Пользователь #" + requestorId + " не найден.");
@@ -66,14 +70,15 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional
     public ItemRequest createItemRequest(ItemRequest itemRequest, Long requestorId) {
         LocalDateTime currentDate = LocalDateTime.now();
 
         User requestor = userRepository.findById(requestorId)
                 .orElseThrow(() -> new NotFoundException("Пользователь #" + requestorId + " не найден."));
 
-        itemRequest.setRequestor(requestor);
-        itemRequest.setCreated(currentDate);
+        itemRequest.setRequestor(requestor); // Не совсем понял, что имеется ввиду - перенести в маппер эту логику.
+        itemRequest.setCreated(currentDate); // Или подразумевается, что сеттеры организовать так, чтобы не прописывать каждый раз?
         return itemRequestRepository.save(itemRequest);
     }
 

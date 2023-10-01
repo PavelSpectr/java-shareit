@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.itemRequest.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -29,6 +31,7 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final CommentRepository commentRepository;
 
     @Override
@@ -47,8 +50,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<Item> getItemsByOwnerId(Long ownerId) {
-        List<Item> items = itemRepository.findItemsByOwnerIdOrderById(ownerId);
+    public List<Item> getItemsByOwnerId(Long ownerId, Pageable pageable) {
+        List<Item> items = itemRepository.findItemsByOwnerIdOrderById(ownerId, pageable);
 
         setLastAndNextBookingData(items);
         setComments(items);
@@ -57,8 +60,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<Item> searchItems(String searchText) {
-        return (!searchText.isBlank()) ? itemRepository.search(searchText) : Collections.emptyList();
+    public List<Item> searchItems(String searchText, Pageable pageable) {
+        return (!searchText.isBlank()) ? itemRepository.search(searchText, pageable) : Collections.emptyList();
     }
 
     @Override
@@ -67,6 +70,11 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Пользователь #" + ownerId + " не найден."));
 
         item.setOwner(owner);
+
+        if (item.getRequest() != null) {
+            item.setRequest(itemRequestRepository.findById(item.getRequest().getId()).orElse(null));
+        }
+
         return itemRepository.save(item);
     }
 
@@ -116,7 +124,7 @@ public class ItemServiceImpl implements ItemService {
                 itemId, currentDateTime, BookingStatus.APPROVED);
 
         if (!isAvailableForComment) {
-            throw new ValidationException("Пользователь #" + authorId + " не брал в аренду вещь #" + authorId + " " +
+            throw new ValidationException("Пользователь #" + authorId + " не брал в аренду вещь #" + itemId + " " +
                     "или срок аренды еще не завершен.");
         }
 

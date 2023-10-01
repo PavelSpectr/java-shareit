@@ -20,15 +20,15 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Текст комментария не должн быть пустым или содержать только пробельные символы")
+    @NotBlank(message = "Текст комментария не должен быть пустым или содержать только пробельные символы")
     private String text;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @NotNull(message = "Вещь, к которой относится комментарий не должна быть null")
     private Item item;
 
-    @ManyToOne
-    @NotNull(message = "Автор комментария не должн быть null")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "Автор комментария не должен быть null")
     private User author;
 
     @Column(name = "created_at")

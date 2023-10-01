@@ -12,8 +12,6 @@ import ru.practicum.shareit.validation.ValidationGroup;
 
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
-
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -26,7 +24,7 @@ public class UserController {
         log.debug("+ getUsers");
         List<User> users = userService.getUsers();
         log.debug("- getUsers: {}", users);
-        return users.stream().map(UserMapper::toUserDto).collect(toList());
+        return UserMapper.toUserDto(users);
     }
 
     @GetMapping("/{userId}")

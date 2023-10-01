@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -15,7 +16,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,8 +26,8 @@ public class BookingServiceImpl implements BookingService {
     private final ItemRepository itemRepository;
 
     @Override
-    public List<Booking> getBookingsByBookerId(long bookerId, String statusFilter) {
-        List<Booking> bookingByBookerId = new ArrayList<>();
+    public List<Booking> getBookingsByBookerId(long bookerId, String statusFilter, Pageable pageable) {
+        List<Booking> bookings;
         LocalDateTime currentDateTime = LocalDateTime.now();
 
         if (!userRepository.existsById(bookerId)) {
@@ -35,41 +35,42 @@ public class BookingServiceImpl implements BookingService {
         }
 
         try {
-            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.optionalStatus(statusFilter).orElseThrow(() ->
-                    new ValidationException("Unknown state: UNSUPPORTED_STATUS"));
+            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.valueOf(statusFilter);
 
             switch (bookingStatusFilter) {
                 case ALL:
-                    bookingByBookerId = bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId);
+                    bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId, pageable);
                     break;
                 case CURRENT:
-                    bookingByBookerId = bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId,
+                    bookings = bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId,
                             currentDateTime,
-                            currentDateTime);
+                            currentDateTime, pageable);
                     break;
                 case PAST:
-                    bookingByBookerId = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, currentDateTime);
+                    bookings = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, currentDateTime, pageable);
                     break;
                 case FUTURE:
-                    bookingByBookerId = bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, currentDateTime);
+                    bookings = bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, currentDateTime, pageable);
                     break;
                 case WAITING:
-                    bookingByBookerId = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
+                    bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING, pageable);
                     break;
                 case REJECTED:
-                    bookingByBookerId = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
+                    bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED, pageable);
                     break;
-                //Не совсем понимаю, как это работает, но return bookings, в случае удаления default, требует инициализации
+                default:
+                    throw new ValidationException("Неверный статус бронирования: " + bookingStatusFilter);
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown state: UNSUPPORTED_STATUS");
         }
-        return bookingByBookerId;
+
+        return bookings;
     }
 
     @Override
-    public List<Booking> getBookingsByItemOwnerId(long itemOwnerId, String statusFilter) {
-        List<Booking> bookingByItemOwnerId = new ArrayList<>();
+    public List<Booking> getBookingsByItemOwnerId(long itemOwnerId, String statusFilter, Pageable pageable) {
+        List<Booking> bookings;
         LocalDateTime currentDateTime = LocalDateTime.now();
 
         if (!userRepository.existsById(itemOwnerId)) {
@@ -77,34 +78,40 @@ public class BookingServiceImpl implements BookingService {
         }
 
         try {
-            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.optionalStatus(statusFilter).orElseThrow(() ->
-                    new ValidationException("Unknown state: UNSUPPORTED_STATUS"));
+            BookingStatusFilter bookingStatusFilter = BookingStatusFilter.valueOf(statusFilter);
             switch (bookingStatusFilter) {
                 case ALL:
-                    bookingByItemOwnerId = bookingRepository.findAllByItem_OwnerIdOrderByStartDesc(itemOwnerId);
+                    bookings = bookingRepository.findAllByItem_OwnerIdOrderByStartDesc(itemOwnerId, pageable);
                     break;
                 case CURRENT:
-                    bookingByItemOwnerId = bookingRepository.findAllByItem_OwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(itemOwnerId,
-                            currentDateTime,
-                            currentDateTime);
+                    bookings = bookingRepository
+                            .findAllByItem_OwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(itemOwnerId,
+                                    currentDateTime, currentDateTime, pageable);
                     break;
                 case PAST:
-                    bookingByItemOwnerId = bookingRepository.findAllByItem_OwnerIdAndEndBeforeOrderByStartDesc(itemOwnerId, currentDateTime);
+                    bookings = bookingRepository.findAllByItem_OwnerIdAndEndBeforeOrderByStartDesc(itemOwnerId,
+                            currentDateTime, pageable);
                     break;
                 case FUTURE:
-                    bookingByItemOwnerId = bookingRepository.findAllByItem_OwnerIdAndStartAfterOrderByStartDesc(itemOwnerId, currentDateTime);
+                    bookings = bookingRepository.findAllByItem_OwnerIdAndStartAfterOrderByStartDesc(itemOwnerId,
+                            currentDateTime, pageable);
                     break;
                 case WAITING:
-                    bookingByItemOwnerId = bookingRepository.findAllByItem_OwnerIdAndStatusOrderByStartDesc(itemOwnerId, BookingStatus.WAITING);
+                    bookings = bookingRepository.findAllByItem_OwnerIdAndStatusOrderByStartDesc(itemOwnerId,
+                            BookingStatus.WAITING, pageable);
                     break;
                 case REJECTED:
-                    bookingByItemOwnerId = bookingRepository.findAllByItem_OwnerIdAndStatusOrderByStartDesc(itemOwnerId, BookingStatus.REJECTED);
+                    bookings = bookingRepository.findAllByItem_OwnerIdAndStatusOrderByStartDesc(itemOwnerId,
+                            BookingStatus.REJECTED, pageable);
                     break;
+                default:
+                    throw new ValidationException("Неверный статус бронирования: " + bookingStatusFilter);
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown state: UNSUPPORTED_STATUS");
         }
-        return bookingByItemOwnerId;
+
+        return bookings;
     }
 
     @Override
@@ -135,10 +142,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException(String.format("Вещь #" + itemId + " недоступна для бронирования."));
         }
 
-        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(item.getId(), booking.getStart(), booking.getEnd());
-        if (!overlappingBookings.isEmpty()) {
-            throw new ValidationException("Невозможно создать бронирование. Уже существуют бронирования, которые пересекаются по времени.");
-        }
         booking.setBooker(booker);
         booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
@@ -164,7 +167,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (!currentStatus.equals(BookingStatus.WAITING)) {
             throw new ValidationException("Подтверждение или отклонение запроса на бронирование невозможно, " +
-                    "так как бронирование #" + bookingId + " имеет статус " + currentStatus);
+                    "так как бронирование #" + bookingId + " " + currentStatus.getName());
         }
 
         booking.setStatus(isApproved ? BookingStatus.APPROVED : BookingStatus.REJECTED);

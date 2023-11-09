@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  gateway:
+    build: gateway
+    image: shareit-gateway
+    container_name: Shareit-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - server
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+
+  server:
+    build: server
+    image: shareit-server
+    container_name: Shareit-server
+    ports:
+      - "9090:9090"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '1G'
+
+  db:
+    image: postgres:16.0-alpine3.18
+    container_name: PostgreSQL
+    ports:
+      - "6541:5432"
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
